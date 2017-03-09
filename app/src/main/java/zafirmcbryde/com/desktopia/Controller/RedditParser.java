@@ -3,11 +3,19 @@ package zafirmcbryde.com.desktopia.Controller;
 import android.net.Uri;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import zafirmcbryde.com.desktopia.Model.DesktopItems;
 
 public class RedditParser
 {
@@ -59,17 +67,47 @@ public class RedditParser
         return new String(getUrlBytes(urlSpec));
     }
 
-    public void fetchItems()
+    public List<DesktopItems> fetchItems()
     {
+        List<DesktopItems> items = new ArrayList<>();
+
         try
         {
             String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json?limit=101")
                     .buildUpon().build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
+            JSONObject jsonBody = new JSONObject(jsonString);
+            parseItems(items, jsonBody);
+        } catch (JSONException je)
+        {
+            Log.e(TAG, "Failed to parse JSON", je);
         } catch (IOException ioe)
         {
             Log.e(TAG, "Failed to fetch items", ioe);
+        }
+
+        return items;
+    }
+
+    private void parseItems(List<DesktopItems> items, JSONObject jsonBody)
+            throws IOException, JSONException
+    {
+        JSONArray postData = jsonBody.getJSONObject("data").getJSONArray("children");
+
+        for (int i = 0; i < postData.length(); i++)
+        {
+            JSONObject post = postData.getJSONObject(i).getJSONObject("data");
+
+            DesktopItems di = new DesktopItems();
+
+            di.setAuthor(post.getString("author"));
+            di.setScore(post.getInt("score"));
+            di.setSubreddit(post.getString("subreddit"));
+            di.setUrl(post.getString("url"));
+            di.setTitle(post.getString("title"));
+
+            items.add(di);
         }
     }
 }
