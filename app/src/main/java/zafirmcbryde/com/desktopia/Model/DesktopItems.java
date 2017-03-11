@@ -1,12 +1,58 @@
 package zafirmcbryde.com.desktopia.Model;
 
-public class DesktopItems
+import android.net.Uri;
+
+import java.io.Serializable;
+
+public class DesktopItems implements Serializable
 {
     private String author;
-    private Integer score;
-    private String subreddit;
     private String title;
     private String url;
+    private String permalink;
+    private String thumbnail;
+    private String after;
+    private String before;
+
+    public String getAfter()
+    {
+        return after;
+    }
+
+    public void setAfter(String after)
+    {
+        this.after = after;
+    }
+
+    public String getBefore()
+    {
+        return before;
+    }
+
+    public void setBefore(String before)
+    {
+        this.before = before;
+    }
+
+    public String getThumbnail()
+    {
+        return thumbnail;
+    }
+
+    public void setThumbnail(String thumbnail)
+    {
+        this.thumbnail = thumbnail;
+    }
+
+    public String getPermalink()
+    {
+        return permalink;
+    }
+
+    public void setPermalink(String permalink)
+    {
+        this.permalink = permalink;
+    }
 
     public String getAuthor()
     {
@@ -16,26 +62,6 @@ public class DesktopItems
     public void setAuthor(String author)
     {
         this.author = author;
-    }
-
-    public Integer getScore()
-    {
-        return score;
-    }
-
-    public void setScore(Integer score)
-    {
-        this.score = score;
-    }
-
-    public String getSubreddit()
-    {
-        return subreddit;
-    }
-
-    public void setSubreddit(String subreddit)
-    {
-        this.subreddit = subreddit;
     }
 
     public String getTitle()
@@ -56,5 +82,12 @@ public class DesktopItems
     public void setUrl(String url)
     {
         this.url = url;
+    }
+
+    public Uri getPhotoPageUri() {
+        return Uri.parse("https://www.reddit.com")
+                .buildUpon()
+                .appendPath(permalink)
+                .build();
     }
 }

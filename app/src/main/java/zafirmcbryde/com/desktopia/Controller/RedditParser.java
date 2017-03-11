@@ -70,10 +70,9 @@ public class RedditParser
     public List<DesktopItems> fetchItems()
     {
         List<DesktopItems> items = new ArrayList<>();
-
         try
         {
-            String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json?limit=101")
+            String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json?limit=100")
                     .buildUpon().build().toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
@@ -86,28 +85,35 @@ public class RedditParser
         {
             Log.e(TAG, "Failed to fetch items", ioe);
         }
-
         return items;
     }
 
     private void parseItems(List<DesktopItems> items, JSONObject jsonBody)
             throws IOException, JSONException
     {
-        JSONArray postData = jsonBody.getJSONObject("data").getJSONArray("children");
-
-        for (int i = 0; i < postData.length(); i++)
+        DesktopItems di1 = new DesktopItems();
+        JSONObject dataPost = jsonBody.getJSONObject("data");
+        di1.setAfter(dataPost.getString("after"));
+        di1.setBefore(dataPost.getString("before"));
+        items.add(di1);
+        JSONArray childPost = dataPost.getJSONArray("children");
+        for (int i = 0; i < childPost.length(); i++)
         {
-            JSONObject post = postData.getJSONObject(i).getJSONObject("data");
+            JSONObject dataPost2 = childPost.getJSONObject(i).getJSONObject("data");
+            DesktopItems di2 = new DesktopItems();
+            di2.setThumbnail(dataPost2.getString("thumbnail"));
+            di2.setAuthor(dataPost2.getString("author"));
+            di2.setPermalink(dataPost2.getString("permalink"));
+            di2.setTitle(dataPost2.getString("title"));
 
-            DesktopItems di = new DesktopItems();
-
-            di.setAuthor(post.getString("author"));
-            di.setScore(post.getInt("score"));
-            di.setSubreddit(post.getString("subreddit"));
-            di.setUrl(post.getString("url"));
-            di.setTitle(post.getString("title"));
-
-            items.add(di);
+            JSONObject previewPost = dataPost2.getJSONObject("preview");
+            JSONArray imagesPost = previewPost.getJSONArray("images");
+            for (int y = 0; y < imagesPost.length(); y++)
+            {
+                JSONObject sourcePost = imagesPost.getJSONObject(y).getJSONObject("source");
+                di2.setUrl(sourcePost.getString("url"));
+                items.add(di2);
+            }
         }
     }
 }
