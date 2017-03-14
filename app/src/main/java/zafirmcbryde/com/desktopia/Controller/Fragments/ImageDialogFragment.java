@@ -1,7 +1,10 @@
 package zafirmcbryde.com.desktopia.Controller.Fragments;
 
 
+import android.app.FragmentTransaction;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.view.PagerAdapter;
@@ -87,20 +90,26 @@ public class ImageDialogFragment extends DialogFragment
         public void onPageScrollStateChanged(int arg0)
         {
 
-        }
-    };
+        }    };
 
     private void displayMetaInfo(int position)
     {
-        DesktopItems items = mItems.get(position);
+
+
+        final DesktopItems items = mItems.get(position);
         title.setText(items.getTitle());
         author.setText(items.getAuthor());
         mButton.setOnClickListener(new View.OnClickListener()
         {
+            Intent i = null, chooser = null;
+
             @Override
             public void onClick(View v)
             {
-
+                i = new Intent(Intent.ACTION_VIEW);
+                i.setData(Uri.parse("https://www.reddit.com" + items.getPermalink()));
+                chooser = i.createChooser(i, "Launch Reddit");
+                startActivity(chooser);
             }
         });
     }
@@ -110,6 +119,11 @@ public class ImageDialogFragment extends DialogFragment
     {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Black_NoTitleBar_Fullscreen);
+    }
+
+    public void show(FragmentTransaction ft, String slideshow)
+    {
+
     }
 
     //  adapter

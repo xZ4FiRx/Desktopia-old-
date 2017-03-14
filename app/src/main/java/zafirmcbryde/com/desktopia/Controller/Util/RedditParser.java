@@ -1,4 +1,4 @@
-package zafirmcbryde.com.desktopia.Controller;
+package zafirmcbryde.com.desktopia.Controller.Util;
 
 import android.net.Uri;
 import android.util.Log;
@@ -14,6 +14,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import zafirmcbryde.com.desktopia.Model.DesktopItems;
 
@@ -70,10 +71,18 @@ public class RedditParser
     public List<DesktopItems> fetchItems()
     {
         List<DesktopItems> items = new ArrayList<>();
+        DesktopItems desktopItems = new DesktopItems();
+        String after = desktopItems.getAfter();
+        int limit = 25;
         try
         {
-            String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json?limit=100")
-                    .buildUpon().build().toString();
+            String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json")
+                    .buildUpon()
+                    .appendQueryParameter("limit", String.valueOf(limit))
+                    .appendQueryParameter("&after", after)
+//                    .appendQueryParameter("?count", )
+                    .build()
+                    .toString();
             String jsonString = getUrlString(url);
             Log.i(TAG, "Received JSON: " + jsonString);
             JSONObject jsonBody = new JSONObject(jsonString);
@@ -105,14 +114,18 @@ public class RedditParser
             di2.setAuthor(dataPost2.getString("author"));
             di2.setPermalink(dataPost2.getString("permalink"));
             di2.setTitle(dataPost2.getString("title"));
+            di2.setDomain(dataPost2.getString("domain"));
 
             JSONObject previewPost = dataPost2.getJSONObject("preview");
             JSONArray imagesPost = previewPost.getJSONArray("images");
             for (int y = 0; y < imagesPost.length(); y++)
             {
-                JSONObject sourcePost = imagesPost.getJSONObject(y).getJSONObject("source");
-                di2.setUrl(sourcePost.getString("url"));
-                items.add(di2);
+                if (!Objects.equals(di2.getDomain(), "self.battlestations"))
+                {
+                    JSONObject sourcePost = imagesPost.getJSONObject(y).getJSONObject("source");
+                    di2.setUrl(sourcePost.getString("url"));
+                    items.add(di2);
+                }
             }
         }
     }

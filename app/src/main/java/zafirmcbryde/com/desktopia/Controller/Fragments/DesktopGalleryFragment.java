@@ -1,6 +1,7 @@
 package zafirmcbryde.com.desktopia.Controller.Fragments;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -23,7 +24,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import zafirmcbryde.com.desktopia.Controller.RedditParser;
+import zafirmcbryde.com.desktopia.Controller.Util.RedditParser;
 import zafirmcbryde.com.desktopia.Model.DesktopItems;
 import zafirmcbryde.com.desktopia.R;
 
@@ -33,6 +34,7 @@ public class DesktopGalleryFragment extends Fragment
     private static final String TAG = "DesktopGalleryFragment";
     private List<DesktopItems> mList = new ArrayList<>();
     private SwipeRefreshLayout swipeContainer;
+    private ProgressDialog mProgressDialog;
 
 
     public static DesktopGalleryFragment newInstance()
@@ -228,4 +230,3 @@ public class DesktopGalleryFragment extends Fragment
         }
     }
 }
-

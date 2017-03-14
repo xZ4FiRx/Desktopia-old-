@@ -14,6 +14,19 @@ public class DesktopItems implements Serializable
     private String after;
     private String before;
 
+    public String getDomain()
+    {
+        return domain;
+    }
+
+    public void setDomain(String domain)
+    {
+        this.domain = domain;
+    }
+
+    private String domain;
+
+
     public String getAfter()
     {
         return after;
@@ -84,10 +97,12 @@ public class DesktopItems implements Serializable
         this.url = url;
     }
 
-    public Uri getPhotoPageUri() {
+    public Uri getPhotoPageUri()
+    {
         return Uri.parse("https://www.reddit.com")
                 .buildUpon()
                 .appendPath(permalink)
                 .build();
     }
+
 }
