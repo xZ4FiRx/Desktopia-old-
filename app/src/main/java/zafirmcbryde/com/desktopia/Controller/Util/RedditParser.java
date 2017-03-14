@@ -68,19 +68,18 @@ public class RedditParser
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<DesktopItems> fetchItems()
+    public List<DesktopItems> fetchItems(int count)
     {
         List<DesktopItems> items = new ArrayList<>();
         DesktopItems desktopItems = new DesktopItems();
         String after = desktopItems.getAfter();
-        int limit = 25;
+
         try
         {
             String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json")
                     .buildUpon()
-                    .appendQueryParameter("limit", String.valueOf(limit))
+                    .appendQueryParameter("?count", String.valueOf(count))
                     .appendQueryParameter("&after", after)
-//                    .appendQueryParameter("?count", )
                     .build()
                     .toString();
             String jsonString = getUrlString(url);
