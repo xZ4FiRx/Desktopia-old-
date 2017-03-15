@@ -12,7 +12,6 @@ public class DesktopItems implements Serializable
     private String permalink;
     private String thumbnail;
     private String after;
-    private String before;
 
     public String getDomain()
     {
@@ -37,15 +36,6 @@ public class DesktopItems implements Serializable
         this.after = after;
     }
 
-    public String getBefore()
-    {
-        return before;
-    }
-
-    public void setBefore(String before)
-    {
-        this.before = before;
-    }
 
     public String getThumbnail()
     {

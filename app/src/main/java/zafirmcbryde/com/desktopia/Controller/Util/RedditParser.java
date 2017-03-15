@@ -102,7 +102,6 @@ public class RedditParser
         DesktopItems di1 = new DesktopItems();
         JSONObject dataPost = jsonBody.getJSONObject("data");
         di1.setAfter(dataPost.getString("after"));
-        di1.setBefore(dataPost.getString("before"));
         items.add(di1);
         JSONArray childPost = dataPost.getJSONArray("children");
         for (int i = 0; i < childPost.length(); i++)
