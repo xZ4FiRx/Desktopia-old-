@@ -21,6 +21,8 @@ import zafirmcbryde.com.desktopia.Model.DesktopItems;
 public class RedditParser
 {
     private static final String TAG = "RedditParser";
+    private DesktopItems mItems;
+
 
     public byte[] getUrlBytes(String urlSpec) throws IOException
     {
@@ -68,17 +70,17 @@ public class RedditParser
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<DesktopItems> fetchItems(int count)
+    public List<DesktopItems> fetchItems(String after)
     {
         List<DesktopItems> items = new ArrayList<>();
-        DesktopItems desktopItems = new DesktopItems();
-        String after = desktopItems.getAfter();
+        int count = 0;
+        int counter = count + 25;
 
         try
         {
             String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json")
                     .buildUpon()
-                    .appendQueryParameter("?count", String.valueOf(count))
+                    .appendQueryParameter("?count", String.valueOf(counter))
                     .appendQueryParameter("&after", after)
                     .build()
                     .toString();

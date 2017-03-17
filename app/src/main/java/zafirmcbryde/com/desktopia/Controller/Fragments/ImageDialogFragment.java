@@ -94,8 +94,6 @@ public class ImageDialogFragment extends DialogFragment
 
     private void displayMetaInfo(int position)
     {
-
-
         final DesktopItems items = mItems.get(position);
         title.setText(items.getTitle());
         author.setText(items.getAuthor());

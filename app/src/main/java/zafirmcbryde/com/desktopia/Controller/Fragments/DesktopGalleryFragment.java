@@ -4,18 +4,19 @@ package zafirmcbryde.com.desktopia.Controller.Fragments;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -23,34 +24,36 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import zafirmcbryde.com.desktopia.Controller.Util.EndlessRecyclerViewScrollListener;
 import zafirmcbryde.com.desktopia.Controller.Util.RedditParser;
 import zafirmcbryde.com.desktopia.Model.DesktopItems;
 import zafirmcbryde.com.desktopia.R;
 
-import static android.content.ContentValues.TAG;
 
 public class DesktopGalleryFragment extends Fragment
 {
     private RecyclerView mDesktopRecyclerView;
     private List<DesktopItems> mList = new ArrayList<>();
-    private boolean loading = true;
-    private EndlessRecyclerViewScrollListener scrollListener;
-    private int count = 1;
-    int pastVisiblesItems, visibleItemCount, totalItemCount;
+    private int count;
+    private String after;
+    private Parcelable recyclerViewState;
+
 
     public static DesktopGalleryFragment newInstance()
     {
         return new DesktopGalleryFragment();
     }
 
+    public String getAfter(String s)
+    {
+        return this.after = s;
+    }
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
-
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute(count);
+        new FetchItemsTask().execute(getAfter(DesktopItems.getAfter()));
     }
 
     @Override
@@ -63,59 +66,63 @@ public class DesktopGalleryFragment extends Fragment
         final GridLayoutManager mLayoutManager;
         mLayoutManager = new GridLayoutManager(getActivity(), 3);
         mDesktopRecyclerView.setLayoutManager(mLayoutManager);
+
         mDesktopRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener()
         {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState)
             {
+                recyclerViewState = mDesktopRecyclerView.getLayoutManager().onSaveInstanceState();
+                mDesktopRecyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
+
                 PhotoAdapter adapter = (PhotoAdapter) recyclerView.getAdapter();
                 int lastPostion = adapter.getLastBoundPosition();
                 GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
                 int loadBufferPosition = 1;
-                if(lastPostion >= adapter.getItemCount() - layoutManager.getSpanCount() - loadBufferPosition)
+                if (lastPostion >= adapter.getItemCount() - layoutManager.getSpanCount() - loadBufferPosition)
                 {
-                   new FetchItemsTask().execute(lastPostion + 1);
+                    if(after == null)
+                    {
+                        Toast.makeText(getContext(), " The vaule of after is " + after, Toast.LENGTH_SHORT).show();
+                    }
+                    else
+                    {
+                        new FetchItemsTask().execute(after);
+                    }
                 }
             }
-
-            @Override
-            public void onScrolled(RecyclerView recyclerView, int dx, int dy)
-            {
-                super.onScrolled(recyclerView, dx, dy);
-            }
         });
-
-
 
         mDesktopRecyclerView.addOnItemTouchListener(new DesktopGalleryFragment.
                 RecyclerTouchListener(
 
-            getContext(),mDesktopRecyclerView, new
+                getContext(), mDesktopRecyclerView, new
 
-            ClickListener()
-            {
-                @Override
-                public void onClick (View view,int position)
+                ClickListener()
                 {
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("images", (Serializable) mList);
-                    bundle.putInt("position", position);
+                    @Override
+                    public void onClick(View view, int position)
+                    {
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("images", (Serializable) mList);
+                        bundle.putInt("position", position);
 
-                    FragmentManager fragmentManager = getFragmentManager();
-                    FragmentTransaction ft = fragmentManager.beginTransaction();
-                    ImageDialogFragment newFragment = ImageDialogFragment.newInstance();
-                    newFragment.setArguments(bundle);
-                    newFragment.show(ft, "slideshow");
-                }
+                        FragmentManager fragmentManager = getFragmentManager();
+                        FragmentTransaction ft = fragmentManager.beginTransaction();
+                        ImageDialogFragment newFragment = ImageDialogFragment.newInstance();
+                        newFragment.setArguments(bundle);
+                        newFragment.show(ft, "slideshow");
+                    }
 
-                @Override
-                public void onLongClick (View view,int position)
-                {
-                    //Later
-                }
-            }));
+                    @Override
+                    public void onLongClick(View view, int position)
+                    {
+                        //Later
+                    }
+                }));
+
         return v;
-        }
+    }
 
     private void setupAdapter()
     {
@@ -123,6 +130,13 @@ public class DesktopGalleryFragment extends Fragment
         {
             mDesktopRecyclerView.setAdapter(new PhotoAdapter(mList));
         }
+    }
+
+    interface ClickListener
+    {
+        void onClick(View view, int position);
+
+        void onLongClick(View view, int position);
     }
 
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder>
@@ -154,7 +168,6 @@ public class DesktopGalleryFragment extends Fragment
             DesktopItems desktopItems = mGalleryItems.get(position);
             photoHolder.bindGalleryItem(desktopItems);
             lastBoundPosition = position;
-            Log.i(TAG,"Last bound position is " + Integer.toString(lastBoundPosition));
         }
 
         @Override
@@ -182,13 +195,6 @@ public class DesktopGalleryFragment extends Fragment
                     .load(desktopItems.getUrl())
                     .into(mImageView);
         }
-    }
-
-    interface ClickListener
-    {
-        void onClick(View view, int position);
-
-        void onLongClick(View view, int position);
     }
 
     static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener
@@ -247,25 +253,30 @@ public class DesktopGalleryFragment extends Fragment
         }
     }
 
-    private class FetchItemsTask extends AsyncTask<Integer, Void, List<DesktopItems>>
+    private class FetchItemsTask extends AsyncTask<String, Void, List<DesktopItems>>
     {
-        @Override
-        protected List<DesktopItems> doInBackground(Integer... params)
-        {
 
+        @Override
+        protected List<DesktopItems> doInBackground(String... params)
+        {
             return new RedditParser().fetchItems(params[0]);
         }
 
         @Override
         protected void onPostExecute(List<DesktopItems> items)
         {
+            getAfter(DesktopItems.getAfter()); //Getting the after value. Very important.
+
             if (count > 1)
             {
                 mList.addAll(items);
                 mDesktopRecyclerView.getAdapter().notifyDataSetChanged();
+
             } else
             {
                 mList = items;
+                recyclerViewState = mDesktopRecyclerView.getLayoutManager().onSaveInstanceState();//Save state
+                mDesktopRecyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);//Restore state
                 setupAdapter();
             }
             count++;

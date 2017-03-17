@@ -11,7 +11,7 @@ public class DesktopItems implements Serializable
     private String url;
     private String permalink;
     private String thumbnail;
-    private String after;
+    static private String after;
 
     public String getDomain()
     {
@@ -26,7 +26,7 @@ public class DesktopItems implements Serializable
     private String domain;
 
 
-    public String getAfter()
+    public static String getAfter()
     {
         return after;
     }
