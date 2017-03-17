@@ -80,8 +80,8 @@ public class RedditParser
         {
             String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json")
                     .buildUpon()
-                    .appendQueryParameter("?count", String.valueOf(counter))
-                    .appendQueryParameter("&after", after)
+                    .appendQueryParameter("count", String.valueOf(counter))
+                    .appendQueryParameter("after", after)
                     .build()
                     .toString();
             String jsonString = getUrlString(url);

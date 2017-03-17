@@ -16,7 +16,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 
@@ -34,7 +33,7 @@ public class DesktopGalleryFragment extends Fragment
     private RecyclerView mDesktopRecyclerView;
     private List<DesktopItems> mList = new ArrayList<>();
     private int count;
-    private String after;
+    private String after, placeHolder;
     private Parcelable recyclerViewState;
 
 
@@ -53,7 +52,7 @@ public class DesktopGalleryFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute(getAfter(DesktopItems.getAfter()));
+        new FetchItemsTask().execute(after);
     }
 
     @Override
@@ -81,14 +80,7 @@ public class DesktopGalleryFragment extends Fragment
                 int loadBufferPosition = 1;
                 if (lastPostion >= adapter.getItemCount() - layoutManager.getSpanCount() - loadBufferPosition)
                 {
-                    if(after == null)
-                    {
-                        Toast.makeText(getContext(), " The vaule of after is " + after, Toast.LENGTH_SHORT).show();
-                    }
-                    else
-                    {
-                        new FetchItemsTask().execute(after);
-                    }
+                    new FetchItemsTask().execute(after);
                 }
             }
         });
