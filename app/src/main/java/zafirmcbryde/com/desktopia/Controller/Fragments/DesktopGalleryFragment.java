@@ -7,6 +7,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -30,6 +31,8 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import zafirmcbryde.com.desktopia.Controller.Util.RedditParser;
 import zafirmcbryde.com.desktopia.Model.DesktopItems;
@@ -65,17 +68,24 @@ public class DesktopGalleryFragment extends Fragment
 
         ConnectivityManager cm = (ConnectivityManager) getContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE);
-
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
 
-        if(!isConnected)
+        if (!isConnected)
         {
             Toast.makeText(getContext(), "NO NETWORK CONNECTIVITY FOUND.", Toast.LENGTH_LONG).show();
         }
 
-        //A string has to be used for the excution, after is null at this point.
-        new FetchItemsTask().execute(nullString);
+        new Timer().schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                Looper.prepare();
+                new FetchItemsTask().execute(nullString);
+            }
+        }, 1500);
+
     }
 
     @Override
@@ -353,7 +363,6 @@ public class DesktopGalleryFragment extends Fragment
         {
             getAfter(DesktopItems.getAfter());
             progDailog.dismiss();
-
             if (count > 1)
             {
                 mList.addAll(items);
