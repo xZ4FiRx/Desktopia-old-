@@ -90,7 +90,8 @@ public class ImageDialogFragment extends DialogFragment
         public void onPageScrollStateChanged(int arg0)
         {
 
-        }    };
+        }
+    };
 
     private void displayMetaInfo(int position)
     {
@@ -148,7 +149,7 @@ public class ImageDialogFragment extends DialogFragment
             Glide.with(getActivity()).load(desktopItems.getUrl())
                     .thumbnail(0.5f)
                     .crossFade()
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
+                    .diskCacheStrategy(DiskCacheStrategy.RESULT)
                     .into(imageViewPreview);
 
             container.addView(view);

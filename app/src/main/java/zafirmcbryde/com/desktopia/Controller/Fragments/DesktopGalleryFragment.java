@@ -1,23 +1,31 @@
 package zafirmcbryde.com.desktopia.Controller.Fragments;
 
 
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -31,10 +39,12 @@ import zafirmcbryde.com.desktopia.R;
 public class DesktopGalleryFragment extends Fragment
 {
     private RecyclerView mDesktopRecyclerView;
+    private String TAG = "DesktopGalleryFragment";
     private List<DesktopItems> mList = new ArrayList<>();
     private int count;
-    private String after, placeHolder;
-    private Parcelable recyclerViewState;
+    private String after, nullString = null;
+    private static final String BUNDLE_RECYCLER_LAYOUT = "classname.recycler.layout";
+    private SwipeRefreshLayout swipeContainer;
 
 
     public static DesktopGalleryFragment newInstance()
@@ -52,7 +62,20 @@ public class DesktopGalleryFragment extends Fragment
     {
         super.onCreate(savedInstanceState);
         setRetainInstance(true);
-        new FetchItemsTask().execute(after);
+
+        ConnectivityManager cm = (ConnectivityManager) getContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+
+        if(!isConnected)
+        {
+            Toast.makeText(getContext(), "NO NETWORK CONNECTIVITY FOUND.", Toast.LENGTH_LONG).show();
+        }
+
+        //A string has to be used for the excution, after is null at this point.
+        new FetchItemsTask().execute(nullString);
     }
 
     @Override
@@ -61,6 +84,8 @@ public class DesktopGalleryFragment extends Fragment
         View v = inflater.inflate(R.layout.fragment_desktop_gallery, container, false);
         mDesktopRecyclerView = (RecyclerView) v
                 .findViewById(R.id.fragment_desktop_gallery_recycler_view);
+
+        swipeContainer = (SwipeRefreshLayout) v.findViewById(R.id.swipeContainer);
 
         final GridLayoutManager mLayoutManager;
         mLayoutManager = new GridLayoutManager(getActivity(), 3);
@@ -71,22 +96,29 @@ public class DesktopGalleryFragment extends Fragment
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState)
             {
-                recyclerViewState = mDesktopRecyclerView.getLayoutManager().onSaveInstanceState();
-                mDesktopRecyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);
-
-                PhotoAdapter adapter = (PhotoAdapter) recyclerView.getAdapter();
-                int lastPostion = adapter.getLastBoundPosition();
-                GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
-                int loadBufferPosition = 1;
-                if (lastPostion >= adapter.getItemCount() - layoutManager.getSpanCount() - loadBufferPosition)
+                if (newState == RecyclerView.SCROLL_STATE_IDLE)
                 {
-                    new FetchItemsTask().execute(after);
+                }
+                if (newState == RecyclerView.SCROLL_STATE_DRAGGING)
+                {
+                }
+                if (newState == RecyclerView.SCROLL_STATE_SETTLING)
+                {
+                    PhotoAdapter adapter = (PhotoAdapter) recyclerView.getAdapter();
+                    int lastPostion = adapter.getLastBoundPosition();
+                    GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
+                    int loadBufferPosition = 1;
+                    if (lastPostion >= adapter.getItemCount() - layoutManager.getSpanCount() - loadBufferPosition)
+                    {
+
+                        Log.i(TAG, "NEW PAGE WAS CALLED! the after key is = " + after.toString());
+                        new FetchItemsTask().execute(after);
+                    }
                 }
             }
         });
 
-        mDesktopRecyclerView.addOnItemTouchListener(new DesktopGalleryFragment.
-                RecyclerTouchListener(
+        mDesktopRecyclerView.addOnItemTouchListener(new DesktopGalleryFragment.RecyclerTouchListener(
 
                 getContext(), mDesktopRecyclerView, new
 
@@ -113,7 +145,40 @@ public class DesktopGalleryFragment extends Fragment
                     }
                 }));
 
+
+        swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener()
+        {
+            @Override
+            public void onRefresh()
+            {
+                setupAdapter();
+                mList.clear();
+                new FetchItemsTask().execute(nullString);
+                swipeContainer.setRefreshing(false);
+            }
+        });
+
+
         return v;
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState)
+    {
+        super.onViewStateRestored(savedInstanceState);
+
+        if (savedInstanceState != null)
+        {
+            Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable(BUNDLE_RECYCLER_LAYOUT);
+            mDesktopRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState)
+    {
+        super.onSaveInstanceState(outState);
+        outState.putParcelable(BUNDLE_RECYCLER_LAYOUT, mDesktopRecyclerView.getLayoutManager().onSaveInstanceState());
     }
 
     private void setupAdapter()
@@ -124,17 +189,11 @@ public class DesktopGalleryFragment extends Fragment
         }
     }
 
-    interface ClickListener
-    {
-        void onClick(View view, int position);
-
-        void onLongClick(View view, int position);
-    }
-
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder>
     {
         private List<DesktopItems> mGalleryItems;
         private int lastBoundPosition;
+
 
         public int getLastBoundPosition()
         {
@@ -167,6 +226,18 @@ public class DesktopGalleryFragment extends Fragment
         {
             return mGalleryItems.size();
         }
+
+        public void clear()
+        {
+            mGalleryItems.clear();
+            notifyDataSetChanged();
+        }
+
+        public void addAll(List<DesktopItems> list)
+        {
+            mGalleryItems.addAll(list);
+            notifyDataSetChanged();
+        }
     }
 
     private class PhotoHolder extends RecyclerView.ViewHolder
@@ -185,8 +256,18 @@ public class DesktopGalleryFragment extends Fragment
             mDesktopItems = desktopItems;
             Glide.with(getActivity())
                     .load(desktopItems.getUrl())
+                    .placeholder(R.mipmap.ic_placeholder)
+                    .diskCacheStrategy(DiskCacheStrategy.RESULT)
+                    .override(200, 200)
                     .into(mImageView);
         }
+    }
+
+    interface ClickListener
+    {
+        void onClick(View view, int position);
+
+        void onLongClick(View view, int position);
     }
 
     static class RecyclerTouchListener implements RecyclerView.OnItemTouchListener
@@ -248,6 +329,19 @@ public class DesktopGalleryFragment extends Fragment
     private class FetchItemsTask extends AsyncTask<String, Void, List<DesktopItems>>
     {
 
+        private ProgressDialog progDailog = new ProgressDialog(getActivity());
+
+        @Override
+        protected void onPreExecute()
+        {
+            super.onPreExecute();
+            progDailog.setMessage("Loading images...");
+            progDailog.setIndeterminate(false);
+            progDailog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+            progDailog.setCancelable(false);
+            progDailog.show();
+        }
+
         @Override
         protected List<DesktopItems> doInBackground(String... params)
         {
@@ -257,19 +351,19 @@ public class DesktopGalleryFragment extends Fragment
         @Override
         protected void onPostExecute(List<DesktopItems> items)
         {
-            getAfter(DesktopItems.getAfter()); //Getting the after value. Very important.
+            getAfter(DesktopItems.getAfter());
+            progDailog.dismiss();
 
             if (count > 1)
             {
                 mList.addAll(items);
                 mDesktopRecyclerView.getAdapter().notifyDataSetChanged();
-
             } else
             {
                 mList = items;
-                recyclerViewState = mDesktopRecyclerView.getLayoutManager().onSaveInstanceState();//Save state
-                mDesktopRecyclerView.getLayoutManager().onRestoreInstanceState(recyclerViewState);//Restore state
                 setupAdapter();
+                mList.clear();
+                new FetchItemsTask().execute(nullString);
             }
             count++;
         }

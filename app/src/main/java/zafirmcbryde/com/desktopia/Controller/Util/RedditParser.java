@@ -73,14 +73,13 @@ public class RedditParser
     public List<DesktopItems> fetchItems(String after)
     {
         List<DesktopItems> items = new ArrayList<>();
-        int count = 0;
-        int counter = count + 25;
+        int limit = 24;
 
         try
         {
             String url = Uri.parse("https://www.reddit.com/r/battlestations/hot.json")
                     .buildUpon()
-                    .appendQueryParameter("count", String.valueOf(counter))
+                    .appendQueryParameter("limit", String.valueOf(limit))
                     .appendQueryParameter("after", after)
                     .build()
                     .toString();
@@ -104,7 +103,6 @@ public class RedditParser
         DesktopItems di1 = new DesktopItems();
         JSONObject dataPost = jsonBody.getJSONObject("data");
         di1.setAfter(dataPost.getString("after"));
-        items.add(di1);
         JSONArray childPost = dataPost.getJSONArray("children");
         for (int i = 0; i < childPost.length(); i++)
         {

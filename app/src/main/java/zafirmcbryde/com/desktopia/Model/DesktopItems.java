@@ -13,6 +13,7 @@ public class DesktopItems implements Serializable
     private String thumbnail;
     static private String after;
 
+
     public String getDomain()
     {
         return domain;
